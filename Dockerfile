@@ -22,9 +22,13 @@ RUN boot deps
 
 COPY . .
 
-RUN ./build.sh
+RUN boot build
+
+RUN cat  src/head.sh target/loader.jar > bin/boot.sh
 
 RUN native-image -jar ./target/loader.jar --enable-https
+
+RUN mv ./bin/boot.sh /usr/local/bin/boot
 
 RUN mv ./loader /usr/local/bin/boot-native
 
