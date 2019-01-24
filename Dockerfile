@@ -30,9 +30,9 @@ RUN native-image -jar ./target/loader.jar --enable-https
 
 FROM oracle/graalvm-ce:1.0.0-rc10
 
-COPY --from graalvm boot-graalvm/bin/boot.sh /usr/local/bin/boot
+COPY --from=graalvm boot-graalvm/bin/boot.sh /usr/local/bin/boot
 
-COPY --from graalvm boot-graalvm/loader /usr/local/bin/boot-native
+COPY --from=graalvm boot-graalvm/loader /usr/local/bin/boot-native
 
 WORKDIR ~
 
