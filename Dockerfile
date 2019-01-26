@@ -28,9 +28,11 @@ RUN cat  src/head.sh target/loader.jar > bin/boot.sh
 
 RUN native-image -jar ./target/loader.jar --enable-https
 
-RUN mv ./bin/boot.sh /usr/local/bin/boot
+FROM oracle/graalvm-ce:1.0.0-rc10
 
-RUN mv ./loader /usr/local/bin/boot-native
+COPY --from=graalvm boot-graalvm/bin/boot.sh /usr/local/bin/boot
+
+COPY --from=graalvm boot-graalvm/loader /usr/local/bin/boot-native
 
 WORKDIR ~
 
