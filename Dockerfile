@@ -16,7 +16,7 @@ RUN boot build
 
 RUN cat src/head.sh target/loader.jar > bin/boot.sh
 
-FROM bootclj/clojure:1.10
+FROM bootclj/clojure:1.10.0
 
 COPY --from=build /usr/src/bootstrap/bin/boot.sh /usr/local/bin/boot
 
