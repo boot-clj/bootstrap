@@ -12,7 +12,8 @@
     (s/replace "." "-")
     (keyword)))
 
-;; todo: normalize more types of input
+;; TODO: normalize more types of input
+;; TODO: convert string props (true/false, yes/no, 1/0) to bool
 (defn- normalize-val [value]
   (if-not (string? value) value
     (s/replace value "~" (System/getProperty "user.home"))))
