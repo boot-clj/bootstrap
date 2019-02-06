@@ -1,4 +1,4 @@
-(ns boot.config
+(ns bootstrap.config
   (:require [boot.properties :as props]))
 
 ;; Boot Config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
