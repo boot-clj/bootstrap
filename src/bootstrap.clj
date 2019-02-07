@@ -5,6 +5,7 @@
             [bootstrap.config :as conf]
             [boot.cli :as cli]
             [boot.properties :as props]
+            [bootstrap.diag :as diag]
             [bootstrap.feature :as feature])
   (:import  [java.io File]
             [java.util List])
@@ -20,14 +21,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Boot Internal Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn- latest-version []
-  (-> "https://clojars.org/api/artifacts/boot"
-    (slurp)
-    (json/read-str :key-fn keyword)
-    (:latest_release)))
+(defn- boot-artifact []
+  (json/read-str (slurp "https://clojars.org/api/artifacts/boot") :key-fn keyword))
 
-(defn parse-version [version]
-  (if (= version "latest") (latest-version) version))
+(defn- latest-release []
+  (:latest_release (boot-artifact)))
+
+(defn- latest-version []
+  (:latest_version (boot-artifact)))
 
 (defn- version-url [version]
   (str "https://clojars.org/repo/boot/boot/" version "/boot-" version ".jar"))
@@ -70,21 +71,32 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Boot Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn- update? [opts]
+  (or  (:update-snapshot opts)))
+
+(defn- update-boot [opts version]
+  (cond (:update opts)          (download-version (latest-release))
+        (:update-snapshot opts) (download-version (latest-version))
+        :else                   (download-version version)))
+
 (defn -main [& args]
   ;; GraalVM - needed until graalvm can include within the native image;;;;;;;;;
   (System/setProperty "java.library.path" (str (jvm-home) "/jre/lib/amd64"))
-  (let [config  (conf/config)
-        version (parse-version (:boot-version config))
-        {opts :options :as args} (cli/parse-opts args)]
-    (println opts)
-    (cond (:version opts) (print-version config)
-      :else (feature/when-feature config
-              {::feature/allow-root "Boot is refusing to run as user \"root\"."}
-              (feature/when-feature opts              ;; download boot to cache
-                {::feature/online ::feature/skip}     ;; skip when offline
-                (download-version version))
-              (feature/when-feature config            ;; pin version to project
-                {::feature/auto-pin ::feature/skip}   ;; skip error message
-                (pin-version version))
-              (launch-version version args)))))       ;; launch jvm cache jar
+  (let [{opts :options :as cli-opts} (cli/parse-opts args)
+        {version :boot-version
+         user    :user-name :as config} (conf/config)]
+    (if (:version opts) (print-version config)
+      (feature/when-feature config
+        {::feature/allow-root
+          (format "Boot is refusing to run as user \"%s\"." (:user-name config))}
+        (feature/when-feature opts
+          {::feature/online ::feature/skip}
+          (update-boot opts version))
+        (feature/when-feature config            ;; pin version to project
+          {::feature/auto-pin ::feature/skip}   ;; skip when disabled
+          (pin-version version))
+        (feature/when-feature version
+          {::feature/launch
+            (format "Unable to find boot version \"%s\"." version)}
+          (launch-version version args))))))       ;; launch jvm cache jar
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
