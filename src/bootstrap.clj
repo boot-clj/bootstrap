@@ -86,7 +86,7 @@
    ["-U" "--update-snapshot"
     "Update boot to latest snapshot version."]])
 
-(def features
+(def ^:private features
   {::feature/allow-root   "Boot is refusing to run as \'root\' user."
    ::feature/offline-mode "Boot requires an internet connection but appears to be offline."})
 

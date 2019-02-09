@@ -16,7 +16,7 @@
   (comp
     (javac :options ["-Xlint:unchecked"])
     (aot :namespace ['bootstrap])
-    (pom :project 'bootstrap :version "3.0.0-SNAPSHOT")
+    (pom :project 'boot/bootstrap :version "3.0.0-SNAPSHOT")
     (uber)
     (jar :main 'bootstrap :file "loader.jar")
     (target)))
