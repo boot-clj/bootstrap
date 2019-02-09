@@ -87,10 +87,10 @@
     "Update boot to latest snapshot version."]])
 
 (def ^:private features
-  {::feature/allow-root   "Boot is refusing to run as root user."
+  {::feature/allow-root "Boot is refusing to run as root user."
    ::feature/offline-mode "Boot requires an internet connection but appears to be offline."})
 
-(defn- run-boot [{version :boot-version :as config} {opts :options args :arguments}]
+(defn- run-bootstrap [{version :boot-version :as config} {opts :options args :arguments}]
   (if (:version opts) (print-version config)
     (feature/when-feature config features
       (let [{version :boot-version} config]
@@ -103,5 +103,5 @@
 (defn -main [& args]
   ;; GraalVM - needed until graalvm can include within the native image;;;;;;;;;
   (System/setProperty "java.library.path" (str (jvm-home) "/jre/lib/amd64"))
-  (run-boot (conf/config) (cli/parse-opts args defaults :in-order true)))
+  (run-bootstrap (conf/config) (cli/parse-opts args defaults :in-order true)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
