@@ -1,5 +1,5 @@
 (ns bootstrap.config
-  (:require [boot.properties :as props]))
+  (:require [bootstrap.properties :as props]))
 
 ;; Boot Config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn- default-config []

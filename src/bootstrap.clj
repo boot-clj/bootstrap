@@ -5,7 +5,6 @@
             [clojure.tools.cli :as cli]
             [bootstrap.config :as conf]
             [bootstrap.properties :as props]
-            [bootstrap.diag :as diag]
             [bootstrap.feature :as feature])
   (:import  [java.io File]
             [java.util List])
