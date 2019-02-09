@@ -1,4 +1,4 @@
-(ns boot.properties
+(ns bootstrap.properties
   "Boot .properties file management."
   (:require [clojure.java.io :as io]
             [clojure.string  :as s])

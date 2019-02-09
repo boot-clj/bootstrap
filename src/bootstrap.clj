@@ -2,9 +2,9 @@
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
             [clojure.string :as str]
+            [clojure.tools.cli :as cli]
             [bootstrap.config :as conf]
-            [boot.cli :as cli]
-            [boot.properties :as props]
+            [bootstrap.properties :as props]
             [bootstrap.diag :as diag]
             [bootstrap.feature :as feature])
   (:import  [java.io File]
@@ -14,13 +14,13 @@
 ;; GraalVM ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (set! *warn-on-reflection* true) ;; warnings will result in runtime crashes
 
-(def boot-url "https://boot-clj.com")
-
 (defn- jvm-home []
   (or (System/getenv "GRAALVM_HOME") (System/getenv "JAVA_HOME")))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Boot Internal Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(def boot-url "https://boot-clj.com")
+
 (defn- boot-artifact []
   (json/read-str (slurp "https://clojars.org/api/artifacts/boot") :key-fn keyword))
 
@@ -49,6 +49,11 @@
       (println (format "Downloading %s..." url))
       (download-file url jar))))
 
+(defn- update-version [opts version]
+  (cond (:update opts)          (download-version (latest-release))
+        (:update-snapshot opts) (download-version (latest-version))
+        :else                   (download-version version)))
+
 (defn- pin-version [version]
   (let [props (io/file (conf/work-dir) "boot.properties")]
     (when (and (.exists ^File (io/file (conf/work-dir) "boot.properties"))
@@ -71,32 +76,33 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Boot Main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn- update? [opts]
-  (or  (:update-snapshot opts)))
+(def ^:private defaults
+  [["-v" "--verbose"
+    "Verbose output with increasing noise. (-v Level=1, -vv Level=2, -vvv Level=3)"
+    :default 0 :update-fn inc]
+   ["-V" "--version"
+    "Print boot version info."]
+   ["-u" "--update"
+    "Update boot to latest release version."]
+   ["-U" "--update-snapshot"
+    "Update boot to latest snapshot version."]])
 
-(defn- update-boot [opts version]
-  (cond (:update opts)          (download-version (latest-release))
-        (:update-snapshot opts) (download-version (latest-version))
-        :else                   (download-version version)))
+(def features
+  {::feature/allow-root   "Boot is refusing to run as \'root\' user."
+   ::feature/offline-mode "Boot requires an internet connection but appears to be offline."})
+
+(defn- run-boot [{version :boot-version :as config} {opts :options args :arguments}]
+  (if (:version opts) (print-version config)
+    (feature/when-feature config features
+      (let [{version :boot-version} config]
+        (when-not (:offline opts)
+          (update-version opts version))
+        (when (:boot-version-pin config)
+          (pin-version version))
+        (launch-version version args)))))
 
 (defn -main [& args]
   ;; GraalVM - needed until graalvm can include within the native image;;;;;;;;;
   (System/setProperty "java.library.path" (str (jvm-home) "/jre/lib/amd64"))
-  (let [{opts :options :as cli-opts} (cli/parse-opts args)
-        {version :boot-version
-         user    :user-name :as config} (conf/config)]
-    (if (:version opts) (print-version config)
-      (feature/when-feature config
-        {::feature/allow-root
-          (format "Boot is refusing to run as user \"%s\"." (:user-name config))}
-        (feature/when-feature opts
-          {::feature/online ::feature/skip}
-          (update-boot opts version))
-        (feature/when-feature config            ;; pin version to project
-          {::feature/auto-pin ::feature/skip}   ;; skip when disabled
-          (pin-version version))
-        (feature/when-feature version
-          {::feature/launch
-            (format "Unable to find boot version \"%s\"." version)}
-          (launch-version version args))))))       ;; launch jvm cache jar
+  (run-boot (conf/config) (cli/parse-opts args defaults :in-order true)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

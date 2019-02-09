@@ -1,5 +1,6 @@
 (ns bootstrap.feature
-  (:require [clojure.spec.alpha :as spec]))
+  (:require [clojure.spec.alpha :as spec])
+  (:import [java.net InetSocketAddress Socket]))
 
 ;; Feature Helper Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn- feature-url [code]
@@ -34,10 +35,18 @@
 (spec/def ::auto-pin
   (spec/tuple keyword? #(:boot-version-pin %)))
 
-(spec/def ::offline #(:offline %))
+(defn- ping [address port timeout]
+  (let [addr (InetSocketAddress. address port)]
+    (.connect (Socket.) addr timeout)))
 
-(spec/def ::online  #(not (:offline %)))
+(spec/def ::online
+  (fn [_]
+    (try (ping "clojars.org" 80 1000) true
+      (catch Exception e false))))
 
+(spec/def ::offline-mode
+  (spec/or :offline #(:offline %)
+           :online ::online))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -47,6 +56,8 @@
 (defmethod multi-feature ::default [_] (spec/get-spec ::any))
 
 (defmethod multi-feature ::allow-root [_] (spec/get-spec ::root-or-other))
+
+(defmethod multi-feature ::offline-mode [_] (spec/get-spec ::offline-mode))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Feature Gate ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
