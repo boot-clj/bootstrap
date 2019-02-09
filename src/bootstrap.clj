@@ -87,7 +87,7 @@
     "Update boot to latest snapshot version."]])
 
 (def ^:private features
-  {::feature/allow-root   "Boot is refusing to run as \'root\' user."
+  {::feature/allow-root   "Boot is refusing to run as root user."
    ::feature/offline-mode "Boot requires an internet connection but appears to be offline."})
 
 (defn- run-boot [{version :boot-version :as config} {opts :options args :arguments}]
