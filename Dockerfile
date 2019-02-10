@@ -12,7 +12,7 @@ RUN boot deps
 
 COPY ./src ./src/
 
-RUN boot build
+RUN boot build standalone
 
 RUN cat src/head.sh target/loader.jar > bin/boot.sh
 
