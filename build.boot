@@ -31,7 +31,7 @@
   []
   (comp
     (uber)
-    (build-jar)
+    (jar)
     (target)))
 
 (deftask library
