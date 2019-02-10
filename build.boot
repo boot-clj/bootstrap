@@ -32,7 +32,7 @@
   []
   (comp
     (uber)
-    (jar :main 'bootstrap :file "loader.jar")
+    (jar :main 'bootstrap :file "bootstrap.uber.jar")
     (target)))
 
 (deftask library

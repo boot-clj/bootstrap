@@ -14,7 +14,7 @@ COPY ./src ./src/
 
 RUN boot build standalone
 
-RUN cat src/head.sh target/loader.jar > bin/boot.sh
+RUN cat src/head.sh target/bootstrap.uber.jar > bin/boot.sh
 
 FROM bootclj/clojure:1.10.0
 
