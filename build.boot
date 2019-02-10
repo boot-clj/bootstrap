@@ -1,16 +1,19 @@
 (set-env!
   :source-paths   #{"src"}
-  :dependencies '[[org.clojure/clojure   "1.10.0"]
-                  [org.clojure/data.json "0.2.6"]
-                  [org.clojure/tools.cli "0.4.1"]
+  :dependencies '[[org.clojure/clojure   "1.10.0" :scope "provided"]
+                  [org.clojure/data.json "0.2.6"  :scope "provided"]
+                  [org.clojure/tools.cli "0.4.1"  :scope "provided"]
                   [degree9/boot-semver "1.8.0-SNAPSHOT" :scope "test"]])
 
-(require ['degree9.boot-semver :refer :all])
+(require ['degree9.boot-semver :refer :all]
+         ['bootstrap])
 
 (task-options!
   aot   {:namespace ['bootstrap]}
-  pom   {:project 'boot/bootstrap}
-  jar   {:main 'bootstrap :file "loader.jar"})
+  pom   {:project 'boot/bootstrap
+         :description "Bootstrap ."
+         :url         "https://github.com/degree9/boot-semver"
+         :scm {:url "https://github.com/degree9/boot-semver"}})
 
 (deftask deps
   "Preload deps into docker container."
@@ -29,7 +32,7 @@
   []
   (comp
     (uber)
-    (jar)
+    (jar :main 'bootstrap :file "loader.jar")
     (target)))
 
 (deftask library
