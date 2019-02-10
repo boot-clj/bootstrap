@@ -8,7 +8,6 @@
 (require ['degree9.boot-semver :refer :all])
 
 (task-options!
-  javac {:options ["-Xlint:unchecked"]}
   aot   {:namespace ['bootstrap]}
   pom   {:project 'boot/bootstrap}
   jar   {:main 'bootstrap :file "loader.jar"})
@@ -23,7 +22,6 @@
   []
   (comp
     (version)
-    (javac)
     (aot)))
 
 (deftask standalone
