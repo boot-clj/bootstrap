@@ -63,8 +63,14 @@
 
 (defn- launch-version [version args]
   (let [jar     (.getAbsolutePath ^File (version-jar version))
-        command (:boot-java-command (conf/config) "java")
-        ^List args (into [command "-jar" jar] args)]
+        conf    (conf/config)
+        command (:boot-java-command conf "java")
+        jvm-options (some-> (get conf :boot-jvm-options) vector)
+        ^List args (into [command]
+                         (concat
+                          jvm-options
+                          ["-jar" jar]
+                          args))]
     (.waitFor (.start (.inheritIO (ProcessBuilder. args))))))
 
 (defn- print-version [config]
