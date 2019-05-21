@@ -55,7 +55,7 @@
 
 (defn- pin-version [version]
   (let [props (io/file (conf/work-dir) "boot.properties")]
-    (when (and (.exists ^File (io/file (conf/work-dir) "boot.properties"))
+    (when (and (.exists ^File props)
                (not= version (:boot-version (conf/project))))
       (println (format "Pinning BOOT_VERSION to %s..." version))
       (-> (props/load-properties props)
